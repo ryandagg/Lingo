@@ -1,4 +1,14 @@
 extends layout
 
 block content
-	h1 Hello Boulder!
+	h1 Lingo - Translation services
+	form(method="post" action='/translate')
+		input(type="text" name="text" placeholder="Word to translate")
+		br
+		input(type="text" name="from" placeholder="Language to translate from")
+		br
+		input(type="text" name="to" placeholder="Language to translate to")
+		br
+		input(type="submit" value="Translate")
+	if translation 
+		div Translation: #{translation.translation}
