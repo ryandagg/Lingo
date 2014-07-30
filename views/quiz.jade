@@ -1,0 +1,16 @@
+extends layout
+
+block content
+	h1 Quiz Page
+	if !quizLanguage
+	form(method="post" action="/setLanguage")
+		select(name="quizLanguage") 
+			option(value="French") French
+			option(value="Spanish") Spanish
+		input(type="submit" value="Start Quiz")
+	if quizLanguage
+		div Translate this word: #{aWord}
+			form(method="post" action="/quizResponse")
+				input(type="text" name="quizAnswer")
+				input(type="submit" value="Submit")
+
