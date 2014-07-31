@@ -11,6 +11,17 @@ var beglobal = new BeGlobal.BeglobalAPI( {
 	api_token: 'ZrINkRgRkQke3sbr7hDUlQ%3D%3D'
 });
 
+//  // used to get list of all language pairs. Saved in beglobal_lang_pairs.txt
+// beglobal.languages.all(
+//   function(err, results) {
+//     if (err) {
+//       return console.log(err);
+//     }
+
+//     console.log(results);
+//   }
+// );
+
 mongoose.connect('mongodb://localhost/lingo');
 
 var app = express();
@@ -23,6 +34,7 @@ app.get('/', function(req, res) {
 	res.render('index');
 });
 
+// used for main page translation service
 app.post('/translate', function(req, res) {
 	beglobal.translations.translate(
 	  {text: req.body.text, from: req.body.from, to: req.body.to},
@@ -37,26 +49,49 @@ app.post('/translate', function(req, res) {
 	  });
 });
 
+
 app.get('/quiz', function(req,res) {
 	res.render('quiz');
 })
 
+// used when language to translate from is choosen on quiz page
 app.post('/setLanguage', function(req, res) {
 	var word = randomWords();
 	// console.log(word)
 	beglobal.translations.translate(
-	  {text: word, from: 'eng', to: req.body.quizLanguage},
-	  function(err, results) {
+	  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
 	    if (err) {
 	      return console.log('hello',err);
 	    }
 
-	    // console.log(results);
+	    console.log("results:", results);
+	    model.createQuestion(results.to, results.from, results.translation, word);
 		res.render('quiz', {
 			aWord: results.translation,
+			quizLanguage: req.body.quizLanguage
 		})
 
-	  });	
+	 	}
+	);	
+})
+
+app.post("/quizResponse", function(req, res){
+	// console.log("submited word: ", req.body.quizAnswer);
+	model.User.find({id: 0}, function(error, user) {
+		if(error) {
+			console.log('Not found in quiz response')
+		}else {
+			console.log("User info:", user)
+			console.log("req.body.answer:", req.body.answer)
+			if(user[0].questions[user[0].currentQuestion].answer === req.body.answer) {
+					res.send('Correct')
+			}
+			else {
+				console.log('Wrong')
+			}
+		}
+	})
+
 })
 
 var server = app.listen(3157, function() {

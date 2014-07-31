@@ -6,13 +6,48 @@ var beglobal = new BeGlobal.BeglobalAPI( {
 	api_token: 'ZrINkRgRkQke3sbr7hDUlQ%3D%3D'
 });
 
-var Question = mongoose.model('Question', {
-	from: String,
-	to: String,
-	text: String,
-	questionNumber: Number,
-	quizNumber: Number,
-	isCorrect: Boolean,
+var User = mongoose.model("User", {
+	questions: Array,
+	currentQuestion: Number,
+	id: Number
+
 })
 
-	module.exports = { Question: Question };
+var user0 = new User({
+	questions: [],
+	currentQuestion: -1,
+	id: 0
+})
+
+user0.save();
+
+var Question = function(from, to, text, answer) {
+	this.from = from;
+	this.to= to;
+	this.text= text;
+	// questionNumber: Number,
+	// quizNumber: Number,
+	this.isCorrect= null;
+	this.answer = answer
+	// currentQuestion: Boolean
+}
+
+var createQuestion = function(to, from, text, answer) {
+	var newQuestion = new Question(to, from, text, answer);
+	User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
+		if(err){
+			console.log('createQuestion failed');
+		}else{
+			console.log("newQuestion:", newQuestion)
+			
+		}
+		
+	})
+	
+}
+
+module.exports = {
+	Question: Question,
+	createQuestion: createQuestion,
+	User: User
+};

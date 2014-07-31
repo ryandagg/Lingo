@@ -5,12 +5,13 @@ block content
 	if !quizLanguage
 	form(method="post" action="/setLanguage")
 		select(name="quizLanguage") 
-			option(value="French") French
-			option(value="Spanish") Spanish
+			option(value="fra") French
+			option(value="spa") Spanish
 		input(type="submit" value="Start Quiz")
 	if quizLanguage
 		div Translate this word: #{aWord}
 			form(method="post" action="/quizResponse")
-				input(type="text" name="quizAnswer")
-				input(type="submit" value="Submit")
-
+				input#quiz-answer(type="text" name="quizAnswer")
+				input#quiz-submit(type="submit" value="Submit")
+	
+	div#answer-status 
