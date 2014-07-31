@@ -6,6 +6,7 @@ var BeGlobal = require('node-beglobal');
 var randomWords = require('random-words');
 var model = require('./models/model.js');
 var mongoose = require('mongoose');
+var controller = require('./controllers/controller.js')
 
 var beglobal = new BeGlobal.BeglobalAPI( {
 	api_token: 'ZrINkRgRkQke3sbr7hDUlQ%3D%3D'
@@ -35,19 +36,7 @@ app.get('/', function(req, res) {
 });
 
 // used for main page translation service
-app.post('/translate', function(req, res) {
-	beglobal.translations.translate(
-	  {text: req.body.text, from: req.body.from, to: req.body.to},
-	  function(err, results) {
-	    if (err) {
-	      return console.log('hello1', err);
-	    }
-
-	    console.log(results);
-	    res.render('index', {
-	    	translation: results})
-	  });
-});
+app.post('/translate', controller.translate);
 
 
 app.get('/quiz', function(req,res) {
@@ -55,35 +44,20 @@ app.get('/quiz', function(req,res) {
 })
 
 // used when language to translate from is choosen on quiz page
-app.post('/setLanguage', function(req, res) {
-	var word = randomWords();
-	// console.log(word)
-	beglobal.translations.translate(
-	  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
-	    if (err) {
-	      return console.log('hello',err);
-	    }
+app.post('/setLanguage', controller.setLanguage)
 
-	    console.log("results:", results);
-	    model.createQuestion(results.to, results.from, results.translation, word);
-		res.render('quiz', {
-			aWord: results.translation,
-			quizLanguage: req.body.quizLanguage
-		})
+app.post('/quizResponse', controller.quizResponse)
 
-	 	}
-	);	
-})
 
-app.post("/quizResponse", function(req, res){
+/*app.post("/quizResponse", function(req, res){
 	// console.log("submited word: ", req.body.quizAnswer);
-	model.User.find({id: 0}, function(error, user) {
+	model.User.findOne({id: 0}, function(error, user) {
 		if(error) {
 			console.log('Not found in quiz response')
 		}else {
 			console.log("User info:", user)
-			console.log("req.body.answer:", req.body.answer)
-			if(user[0].questions[user[0].currentQuestion].answer === req.body.answer) {
+
+			if(user.questions[user.currentQuestion].answer === req.body.answer) {
 					res.send('Correct')
 			}
 			else {
@@ -92,7 +66,7 @@ app.post("/quizResponse", function(req, res){
 		}
 	})
 
-})
+})*/
 
 var server = app.listen(3157, function() {
 	console.log('Express server listening on port ' + server.address().port);

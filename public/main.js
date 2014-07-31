@@ -1,8 +1,8 @@
 $(document).on('ready', function() {
 
-	$('#quiz-submit').on('click', function(e) {
+	$(document).on('submit', '#quiz-submit',  function(e) {
 		e.preventDefault();
-		// this is NOT WORKING
+
 		console.log('$(#quiz-answer:', $('#quiz-answer').val())
 		$.post('/quizResponse', {answer: $('#quiz-answer').val()})
 			.done(function(data) {

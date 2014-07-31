@@ -9,7 +9,7 @@ var beglobal = new BeGlobal.BeglobalAPI( {
 var User = mongoose.model("User", {
 	questions: Array,
 	currentQuestion: Number,
-	id: Number
+	id: Number,
 
 })
 
@@ -18,8 +18,12 @@ var user0 = new User({
 	currentQuestion: -1,
 	id: 0
 })
+User.remove({}, function() {
+	user0.save();
+	
+});
 
-user0.save();
+
 
 var Question = function(from, to, text, answer) {
 	this.from = from;
@@ -27,7 +31,7 @@ var Question = function(from, to, text, answer) {
 	this.text= text;
 	// questionNumber: Number,
 	// quizNumber: Number,
-	this.isCorrect= null;
+	this.isCorrect= false;
 	this.answer = answer
 	// currentQuestion: Boolean
 }
