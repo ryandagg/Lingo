@@ -44,27 +44,25 @@ var Question = function(from, to, text, answer) {
 	// currentQuestion: Boolean
 }
 
-// this is NOT WORKING
-var createQuestion = function(to, from, text, answer) {
+var createQuestion = function(language, func) {
+	var word = randomWords();
 	beglobal.translations.translate(
-		  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
+		  {text: word, from: 'eng', to: language}, function(err, results) {
 	    if (err) {
-	      return console.log('hello',err);
-	    }
-	    else{
+	    	console.log('model.createQuestion err',err);
+	    }else{
 	    	var newQuestion = new Question(results.to, results.from, results.translation, word);
 			User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
 				if(err){
 					console.log('createQuestion failed');
 				}else{
-					console.log("newQuestion:", newQuestion)
-					
+					console.log("newQuestion:", newQuestion);
 				}
-				
 			})
-			return newQuestion;
+			// console.log("newQuestion line 66:", newQuestion)
+			// sends info to cb from request
+			func(false, newQuestion);
 	    }
-	    
 	});	
 	// var newQuestion = new Question(results.to, results.from, results.translation, word);
 	// User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
@@ -86,21 +84,20 @@ var createQuestion = function(to, from, text, answer) {
 	// 	}
 		
 	// })
-	var word = randomWords();
 		// console.log(word)
-		beglobal.translations.translate(
-		  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
-		    if (err) {
-		      return console.log('hello',err);
-		    }
+		// beglobal.translations.translate(
+		//   {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
+		//     if (err) {
+		//       return console.log('hello',err);
+		//     }
 
-		    // console.log("results:", results);
-		    model.createQuestion(results.to, results.from, results.translation, word);
-			res.render('quiz', {
-				aWord: results.translation,
-				quizLanguage: req.body.quizLanguage
-			})
-		});	
+		//     // console.log("results:", results);
+		//     model.createQuestion(results.to, results.from, results.translation, word);
+		// 	res.render('quiz', {
+		// 		aWord: results.translation,
+		// 		quizLanguage: req.body.quizLanguage
+		// 	})
+		// });	
 	
 }
 

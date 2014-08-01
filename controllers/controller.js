@@ -13,37 +13,66 @@ var beglobal = new BeGlobal.BeglobalAPI( {
 
 var controller = {
 	quizResponse: function(req, res){
-		console.log("submited word: ", req.body.quizAnswer);
+		console.log("controller quizResponse req.body: ", req.body);
+		// find the correct user in db
 		model.User.findOne({id: 0}, function(error, user) {
 			if(error) {
-				console.log('Not found in quiz response')
+				console.log('Not found in quiz response. controller.quizResponse')
 			}else {
+				// logging for testing purposes
 				console.log("User info:", user)
-				// If question is answered correctly
+
+				// flag to send to client for rendering if their response was accurate.
+				var isCorrect;
+				// stored current word to send to client/jQueary
+				var previousWord = user.questions[user.currentQuestion].answer
+
 				// if wrong answer given to question
 				if(user.questions[user.currentQuestion].answer !== req.body.answer)  {
-					res.send('Wrong')
+					isCorrect = "Wrong";
+					// push a 'false' to quizzes boolList
 					user.quizzes[user.currentQuiz].boolList.push(false);
+					user.markModified('quizzes');
+					user.save();
+
+					// helper var to make following if conditional easier to read. It access the current quiz quiz in the user
+					var boolListInUser = user.quizzes[user.currentQuiz].boolList
 
 					// check if the last 2 questions were also wrong
-					if (user.quizzes[user.currentQuestion].boolList.length > 2 && !user.quizzes[user.currentQuestion].boolList[user.quizzes[user.currentQuestion].boolList.length - 1] && !user.quizzes[user.currentQuestion].boolList[user.quizzes[user.currentQuestion].boolList.length - 2] && user.quizzes[user.currentQuestion].boolList[user.quizzes[user.currentQuestion].boolList.length - 3]) {
+					if (boolListInUser.length > 2 
+						&& !boolListInUser[boolListInUser.length - 1] 
+						&& !boolListInUser[boolListInUser.length - 2] 
+						&& !boolListInUser[boolListInUser.length - 3]) {
 						// start new quiz
 						console.log("You suck");
 					}
+					else if(boolListInUser.length === 10){
+						// starte new quiz
+					}
 				}
+				// if the answer is correct
 				else{
 					user.questions[user.currentQuestion].isCorrect = true;
 					user.markModified('questions');
-					user.quizzes[user.currentQuestion].boolList.push(true);
+					user.quizzes[user.currentQuiz].boolList.push(true);
+					user.markModified('quizzes');
 					user.save();
-					res.send('Correct');
+					isCorrect = "Correct"
 				}
 			}
+					// send string to main.js to update html
+			model.createQuestion(user.questions[user.currentQuestion].from, function(err, newWord){
+				// ajax change quiz page
+				// console.log("newWord - controller quizResponse:", newWord)
+				res.send({
+					correct: isCorrect,
+					translateThis: newWord.text,
+					lastWord: previousWord
+				})
+			});
 		})
-		model.createQuestion();
-
 	},
-	// this is NOT WORKING
+
 	setLanguage: function(req, res) {
 		// var word = randomWords();
 		// console.log(word)
@@ -55,22 +84,27 @@ var controller = {
 
 		//     // console.log("results:", results);
 		//     model.createQuestion(results.to, results.from, results.translation, word);
-		var newWord = model.createQuestion();
-		res.render('quiz', {
-			aWord: newWord.text,
-			quizLanguage: req.body.quizLanguage
+		model.createQuestion(req.body.quizLanguage, function(err, newWord){
+			if(err){
+				console.log("controller.js setLanguage fail")
+			}else{
+				res.render('quiz', {
+					aWord: newWord.text,
+					quizLanguage: req.body.quizLanguage
+				})
+			};
 		})
-		// });	
 	},
+
 	translate: function(req, res) {
 		beglobal.translations.translate(
 		  {text: req.body.text, from: req.body.from, to: req.body.to},
 		  function(err, results) {
 		    if (err) {
-		      return console.log('hello1', err);
+		      return console.log('controller.translate error:', err);
 		    }
 
-		    console.log(results);
+		    console.log('controller.translate reuslts:', results);
 		    res.render('index', {
 		    	translation: results})
 		  });
@@ -80,7 +114,6 @@ var controller = {
 		model.createQuiz();
 		res.render('quiz');
 	}
-
 }
 
 module.exports = controller;
