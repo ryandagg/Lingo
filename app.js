@@ -39,9 +39,7 @@ app.get('/', function(req, res) {
 app.post('/translate', controller.translate);
 
 
-app.get('/quiz', function(req,res) {
-	res.render('quiz');
-})
+app.get('/quiz', controller.quiz);
 
 // used when language to translate from is choosen on quiz page
 app.post('/setLanguage', controller.setLanguage)

@@ -7,7 +7,7 @@ block content
 		select(name="quizLanguage") 
 			option(value="fra") French
 			option(value="spa") Spanish
-		input(type="submit" value="Start Quiz")
+		input(type="submit" value="Select Language")
 	if quizLanguage
 		div Translate this word: #{aWord}
 			form#quiz-submit(method="post" action="/quizResponse")

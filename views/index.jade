@@ -13,5 +13,6 @@ block content
 	if translation 
 		div Translation: #{translation.translation}
 
-	a(href='/quiz')
-		button Take a Quiz!
+	//- a(href='/quiz')
+	form(action='/quiz' method="get")
+		input(type='submit' value="Take a Quiz!")

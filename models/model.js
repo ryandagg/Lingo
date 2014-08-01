@@ -10,20 +10,28 @@ var User = mongoose.model("User", {
 	questions: Array,
 	currentQuestion: Number,
 	id: Number,
-
+	quizzes: Array,
+	currentQuiz: Number
 })
 
 var user0 = new User({
 	questions: [],
 	currentQuestion: -1,
-	id: 0
+	id: 0,
+	currentQuiz: -1,
+	quizzes: []
 })
+
+// resets the database on save for testing purposes
 User.remove({}, function() {
 	user0.save();
 	
 });
 
-
+var Quiz = function() {
+	this.passed = false;
+	this.boolList = []
+}
 
 var Question = function(from, to, text, answer) {
 	this.from = from;
@@ -36,22 +44,80 @@ var Question = function(from, to, text, answer) {
 	// currentQuestion: Boolean
 }
 
+// this is NOT WORKING
 var createQuestion = function(to, from, text, answer) {
-	var newQuestion = new Question(to, from, text, answer);
-	User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
-		if(err){
-			console.log('createQuestion failed');
-		}else{
-			console.log("newQuestion:", newQuestion)
+	beglobal.translations.translate(
+		  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
+	    if (err) {
+	      return console.log('hello',err);
+	    }
+	    else{
+	    	var newQuestion = new Question(results.to, results.from, results.translation, word);
+			User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
+				if(err){
+					console.log('createQuestion failed');
+				}else{
+					console.log("newQuestion:", newQuestion)
+					
+				}
+				
+			})
+			return newQuestion;
+	    }
+	    
+	});	
+	// var newQuestion = new Question(results.to, results.from, results.translation, word);
+	// User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
+	// 	if(err){
+	// 		console.log('createQuestion failed');
+	// 	}else{
+	// 		console.log("newQuestion:", newQuestion)
 			
-		}
+	// 	}
 		
-	})
+	// })
+	// var newQuestion = new Question(to, from, text, answer);
+	// User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
+	// 	if(err){
+	// 		console.log('createQuestion failed');
+	// 	}else{
+	// 		console.log("newQuestion:", newQuestion)
+			
+	// 	}
+		
+	// })
+	var word = randomWords();
+		// console.log(word)
+		beglobal.translations.translate(
+		  {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
+		    if (err) {
+		      return console.log('hello',err);
+		    }
+
+		    // console.log("results:", results);
+		    model.createQuestion(results.to, results.from, results.translation, word);
+			res.render('quiz', {
+				aWord: results.translation,
+				quizLanguage: req.body.quizLanguage
+			})
+		});	
 	
+}
+
+var createQuiz = function() {
+	var newQuiz = new Quiz();
+	User.findOneAndUpdate({id: 0}, {$push: {quizzes: newQuiz}, $inc: {currentQuiz: 1}}, function(err, data){
+		if(err){
+			console.log('createQuiz failed');
+		}else{
+			console.log("newQuestion:", newQuiz)
+		}
+	})
 }
 
 module.exports = {
 	Question: Question,
 	createQuestion: createQuestion,
-	User: User
+	User: User,
+	createQuiz: createQuiz
 };
