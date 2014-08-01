@@ -101,13 +101,17 @@ var createQuestion = function(language, func) {
 	
 }
 
-var createQuiz = function() {
+var createQuiz = function(func) {
 	var newQuiz = new Quiz();
-	User.findOneAndUpdate({id: 0}, {$push: {quizzes: newQuiz}, $inc: {currentQuiz: 1}}, function(err, data){
+	User.findOneAndUpdate({id: 0}, {$push: {quizzes: newQuiz}, $inc: {currentQuiz: 1}}, function(err, user){
 		if(err){
 			console.log('createQuiz failed');
 		}else{
 			console.log("newQuestion:", newQuiz)
+		}
+		console.log("arguments:", arguments)
+		if(arguments.length === 2) {
+			func(false, user.quizzes.length)
 		}
 	})
 }

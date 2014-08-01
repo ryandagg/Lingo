@@ -9,7 +9,12 @@ $(document).on('ready', function() {
 				console.log(data);
 				$('#answer-status').text('Your answer to "' + data.lastWord + '": was ' + data.correct);
 				$("#translate-this").text("Translate this word: " + data.translateThis)
-				$('#quiz-answer').val('')
+				$('#quiz-answer').val('');
+				$('#quiz-info').text('Quiz Number: ' + data.quizNumber);
+				console.log('fail ', data.failedMessage)
+				if(data.failedMessage) {
+					$('#quiz-info').append('<p>' + data.failedMessage + '</p>')
+				}
 			})
 	})
 })

@@ -25,15 +25,14 @@ var controller = {
 				// flag to send to client for rendering if their response was accurate.
 				var isCorrect;
 				// stored current word to send to client/jQueary
-				var previousWord = user.questions[user.currentQuestion].answer
-
+				var previousWord = user.questions[user.currentQuestion].text;
+				var failedMessage = null;
 				// if wrong answer given to question
 				if(user.questions[user.currentQuestion].answer !== req.body.answer)  {
 					isCorrect = "Wrong";
 					// push a 'false' to quizzes boolList
 					user.quizzes[user.currentQuiz].boolList.push(false);
 					user.markModified('quizzes');
-					user.save();
 
 					// helper var to make following if conditional easier to read. It access the current quiz quiz in the user
 					var boolListInUser = user.quizzes[user.currentQuiz].boolList
@@ -43,12 +42,17 @@ var controller = {
 						&& !boolListInUser[boolListInUser.length - 1] 
 						&& !boolListInUser[boolListInUser.length - 2] 
 						&& !boolListInUser[boolListInUser.length - 3]) {
-						// start new quiz
-						console.log("You suck");
+						user.quizzes.push(new model.createQuiz());
+						failedMessage = "You answered three quiz questions in a row wrong and have failed the quiz! You must start a new quiz";
+												
+
 					}
 					else if(boolListInUser.length === 10){
-						// starte new quiz
+						user.quizzes.push(new model.createQuiz());
+						failedMessage = "You passed the quiz!"
 					}
+					user.save();
+					var quizNumber = user.quizzes.length;
 				}
 				// if the answer is correct
 				else{
@@ -60,14 +64,16 @@ var controller = {
 					isCorrect = "Correct"
 				}
 			}
-					// send string to main.js to update html
+
 			model.createQuestion(user.questions[user.currentQuestion].from, function(err, newWord){
 				// ajax change quiz page
 				// console.log("newWord - controller quizResponse:", newWord)
 				res.send({
 					correct: isCorrect,
 					translateThis: newWord.text,
-					lastWord: previousWord
+					lastWord: previousWord,
+					quizNumber: quizNumber,
+					failedMessage: failedMessage
 				})
 			});
 		})
@@ -88,11 +94,14 @@ var controller = {
 			if(err){
 				console.log("controller.js setLanguage fail")
 			}else{
-				res.render('quiz', {
-					aWord: newWord.text,
-					quizLanguage: req.body.quizLanguage
+				model.User.findOne({id: 0}, function(error, user) {
+					res.render('quiz', {
+						aWord: newWord.text,
+						quizLanguage: req.body.quizLanguage,
+						quizNumber: user.quizzes.length
+					})
 				})
-			};
+			}
 		})
 	},
 
@@ -111,8 +120,9 @@ var controller = {
 	},
 
 	quiz: function(req,res) {
-		model.createQuiz();
-		res.render('quiz');
+		model.createQuiz(function(error, quizNumber) {
+			res.render('quiz', {quizNumber: quizNumber})
+		});
 	}
 }
 

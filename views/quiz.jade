@@ -2,12 +2,13 @@ extends layout
 
 block content
 	h1 Quiz Page
+	div#quiz-info Quiz Number: #{quizNumber}
 	if !quizLanguage
-	form(method="post" action="/setLanguage")
-		select(name="quizLanguage") 
-			option(value="fra") French
-			option(value="spa") Spanish
-		input(type="submit" value="Select Language")
+		form(method="post" action="/setLanguage")
+			select(name="quizLanguage") 
+				option(value="fra") French
+				option(value="spa") Spanish
+			input(type="submit" value="Select Language")
 	if quizLanguage
 		div#translate-this Translate this word: #{aWord}
 		form#quiz-submit(method="post" action="/quizResponse")
