@@ -23,19 +23,22 @@ var controller = {
 				console.log("User info:", user)
 
 				// flag to send to client for rendering if their response was accurate.
+				var quizNumber = user.quizzes.length;
 				var isCorrect;
 				// stored current word to send to client/jQueary
 				var previousWord = user.questions[user.currentQuestion].text;
 				var failedMessage = null;
+				var boolListInUser = user.quizzes[user.currentQuiz].boolList
 				// if wrong answer given to question
-				if(user.questions[user.currentQuestion].answer !== req.body.answer)  {
+				// if(user.questions[user.currentQuestion].answer !== req.body.answer) 
+				if(!model.fuzzyAnswerCheck(user.questions[user.currentQuestion].answer, req.body.answer)) {
 					isCorrect = "Wrong";
 					// push a 'false' to quizzes boolList
 					user.quizzes[user.currentQuiz].boolList.push(false);
 					user.markModified('quizzes');
 
-					// helper var to make following if conditional easier to read. It access the current quiz quiz in the user
-					var boolListInUser = user.quizzes[user.currentQuiz].boolList
+					// helper var to make following if conditional easier to read. It access the current quiz in the user
+					
 
 					// check if the last 2 questions were also wrong
 					if (boolListInUser.length > 2 
@@ -43,26 +46,35 @@ var controller = {
 						&& !boolListInUser[boolListInUser.length - 2] 
 						&& !boolListInUser[boolListInUser.length - 3]) {
 						user.quizzes.push(new model.createQuiz());
-						failedMessage = "You answered three quiz questions in a row wrong and have failed the quiz! You must start a new quiz";
+						failedMessage = "You answered three quiz questions in a row wrong and have failed the quiz! Starting a new quiz.";
 												
-
 					}
 					else if(boolListInUser.length === 10){
 						user.quizzes.push(new model.createQuiz());
 						failedMessage = "You passed the quiz!"
 					}
-					user.save();
-					var quizNumber = user.quizzes.length;
+					quizNumber = user.quizzes.length;
 				}
 				// if the answer is correct
 				else{
+					// check to make a new quiz
+					if(boolListInUser.length === 10){
+						user.quizzes.push(new model.createQuiz());
+						quizNumber = user.quizzes.length;
+						failedMessage = "You passed the quiz! Starting a new quiz."
+					}
+
 					user.questions[user.currentQuestion].isCorrect = true;
-					user.markModified('questions');
 					user.quizzes[user.currentQuiz].boolList.push(true);
-					user.markModified('quizzes');
-					user.save();
 					isCorrect = "Correct"
+
 				}
+
+				// update database with changes to user
+				user.markModified('quizzes');
+				user.markModified('questions');
+				user.save();
+
 			}
 
 			model.createQuestion(user.questions[user.currentQuestion].from, function(err, newWord){

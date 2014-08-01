@@ -22,11 +22,11 @@ var user0 = new User({
 	quizzes: []
 })
 
-// resets the database on save for testing purposes
-User.remove({}, function() {
-	user0.save();
+// // resets the database on save for testing purposes
+// User.remove({}, function() {
+// 	user0.save();
 	
-});
+// });
 
 var Quiz = function() {
 	this.passed = false;
@@ -64,44 +64,9 @@ var createQuestion = function(language, func) {
 			func(false, newQuestion);
 	    }
 	});	
-	// var newQuestion = new Question(results.to, results.from, results.translation, word);
-	// User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
-	// 	if(err){
-	// 		console.log('createQuestion failed');
-	// 	}else{
-	// 		console.log("newQuestion:", newQuestion)
-			
-	// 	}
-		
-	// })
-	// var newQuestion = new Question(to, from, text, answer);
-	// User.findOneAndUpdate({id: 0}, {$push: {questions: newQuestion}, $inc: {currentQuestion: 1}}, function(err, data){
-	// 	if(err){
-	// 		console.log('createQuestion failed');
-	// 	}else{
-	// 		console.log("newQuestion:", newQuestion)
-			
-	// 	}
-		
-	// })
-		// console.log(word)
-		// beglobal.translations.translate(
-		//   {text: word, from: 'eng', to: req.body.quizLanguage}, function(err, results) {
-		//     if (err) {
-		//       return console.log('hello',err);
-		//     }
-
-		//     // console.log("results:", results);
-		//     model.createQuestion(results.to, results.from, results.translation, word);
-		// 	res.render('quiz', {
-		// 		aWord: results.translation,
-		// 		quizLanguage: req.body.quizLanguage
-		// 	})
-		// });	
-	
 }
 
-var createQuiz = function(func) {
+var createQuiz = function(callBack) {
 	var newQuiz = new Quiz();
 	User.findOneAndUpdate({id: 0}, {$push: {quizzes: newQuiz}, $inc: {currentQuiz: 1}}, function(err, user){
 		if(err){
@@ -110,15 +75,55 @@ var createQuiz = function(func) {
 			console.log("newQuestion:", newQuiz)
 		}
 		console.log("arguments:", arguments)
-		if(arguments.length === 2) {
-			func(false, user.quizzes.length)
+		if(callBack) {
+			callBack(false, user.quizzes.length)
 		}
 	})
+}
+
+var fuzzyAnswerCheck = function(answer, response) {
+	var offBy = 0;
+	response = response.toLowerCase();
+	if(Math.abs(answer.length - response.length) > 1){
+		return false;
+	}
+	else if(Math.abs(answer.length - response.length) === 1){
+		console.log("length off triggered")
+		for(var j = 0; j < answer.length; j++){
+			if(answer[j] !== response[j]){
+				console.log("mistake triggered");
+				// check ahead in answer to see if response is missing a letter
+				if(answer[j + 1] === response[j]) {
+					response = response.slice(0, j) + " " + response.slice(j);
+					break;
+				}
+				// check ahead to check for extra letter
+				else if(answer[j] === response[j + 1]) {
+					offBy++;
+					console.log("too many else if");
+					response = response.slice(0, j) + response.slice(j + 1);
+					break;
+				}
+				else{
+					return false;
+				}
+			}
+		}
+	}
+	console.log("response:", response)
+	for(var i = 0; i < answer.length; i++){
+		if(answer[i] !== response[i]){
+			offBy++;
+		}
+	}
+	console.log("offBy:", offBy);
+	return offBy < 2;
 }
 
 module.exports = {
 	Question: Question,
 	createQuestion: createQuestion,
 	User: User,
+	fuzzyAnswerCheck: fuzzyAnswerCheck,
 	createQuiz: createQuiz
 };
