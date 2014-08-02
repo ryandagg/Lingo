@@ -14,13 +14,22 @@ var User = mongoose.model("User", {
 	currentQuiz: Number
 })
 
-var user0 = new User({
-	questions: [],
-	currentQuestion: -1,
-	id: 0,
-	currentQuiz: -1,
-	quizzes: []
+User.find({}, function(err, results){
+	if(err){
+		console.log("user0 initialze fail");
+	}else if (results.length < 1){
+		var user0 = new User({
+			questions: [],
+			currentQuestion: -1,
+			id: 0,
+			currentQuiz: -1,
+			quizzes: []
+		})
+
+		user0.save();
+	}
 })
+	
 
 // // resets the database on save for testing purposes
 // User.remove({}, function() {
@@ -30,7 +39,7 @@ var user0 = new User({
 
 var Quiz = function() {
 	this.passed = false;
-	this.boolList = []
+	this.boolList = [];
 }
 
 var Question = function(from, to, text, answer) {
@@ -72,11 +81,11 @@ var createQuiz = function(callBack) {
 		if(err){
 			console.log('createQuiz failed');
 		}else{
-			console.log("newQuestion:", newQuiz)
+			// console.log("newQuiz:", newQuiz)
 		}
 		console.log("arguments:", arguments)
 		if(callBack) {
-			callBack(false, user.quizzes.length)
+			callBack(false, {length: user.quizzes.length, newQuiz: newQuiz});
 		}
 	})
 }
@@ -124,6 +133,7 @@ module.exports = {
 	Question: Question,
 	createQuestion: createQuestion,
 	User: User,
+	Quiz: Quiz,
 	fuzzyAnswerCheck: fuzzyAnswerCheck,
 	createQuiz: createQuiz
 };

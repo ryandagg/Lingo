@@ -28,14 +28,15 @@ var controller = {
 				// stored current word to send to client/jQueary
 				var previousWord = user.questions[user.currentQuestion].text;
 				var failedMessage = null;
-				var boolListInUser = user.quizzes[user.currentQuiz].boolList
+				var boolListInUser = user.quizzes[user.currentQuiz].boolList;
+				var shouldCreateQuiz = false;
 				// if wrong answer given to question
 				// if(user.questions[user.currentQuestion].answer !== req.body.answer) 
 				if(!model.fuzzyAnswerCheck(user.questions[user.currentQuestion].answer, req.body.answer)) {
 					isCorrect = "Wrong";
 					// push a 'false' to quizzes boolList
 					user.quizzes[user.currentQuiz].boolList.push(false);
-					user.markModified('quizzes');
+					// user.markModified('quizzes');
 
 					// helper var to make following if conditional easier to read. It access the current quiz in the user
 					
@@ -45,12 +46,18 @@ var controller = {
 						&& !boolListInUser[boolListInUser.length - 1] 
 						&& !boolListInUser[boolListInUser.length - 2] 
 						&& !boolListInUser[boolListInUser.length - 3]) {
-						user.quizzes.push(new model.createQuiz());
+						// // this is async as pushing empty objects to quizzes
+						// user.quizzes.push(new model.createQuiz());
+						shouldCreateQuiz = true;
 						failedMessage = "You answered three quiz questions in a row wrong and have failed the quiz! Starting a new quiz.";
 												
 					}
 					else if(boolListInUser.length === 10){
-						user.quizzes.push(new model.createQuiz());
+						// // this is async as pushing empty objects to quizzes
+						shouldCreateQuiz = true;
+						console.log("user.quizzes[user.currentQuiz].passed:", user.quizzes[user.currentQuiz].passed)
+						user.quizzes[user.currentQuiz].passed = true;
+						// user.quizzes.push(new model.createQuiz());
 						failedMessage = "You passed the quiz!"
 					}
 					quizNumber = user.quizzes.length;
@@ -59,7 +66,10 @@ var controller = {
 				else{
 					// check to make a new quiz
 					if(boolListInUser.length === 10){
-						user.quizzes.push(new model.createQuiz());
+						shouldCreateQuiz = true;
+						user.quizzes[user.currentQuiz].passed = true;
+						console.log("user.quizzes[user.currentQuiz]:", user.quizzes[user.currentQuiz])
+						// user.quizzes.push(new model.createQuiz());
 						quizNumber = user.quizzes.length;
 						failedMessage = "You passed the quiz! Starting a new quiz."
 					}
@@ -69,11 +79,30 @@ var controller = {
 					isCorrect = "Correct"
 
 				}
+				console.log("user.quizzes[user.currentQuiz].passed - before pushing new quiz:", user.quizzes[user.currentQuiz].passed)
 
+				if(shouldCreateQuiz && user.quizzes[user.currentQuiz].passed){
+					user.currentQuiz++;
+					user.quizzes.push({passed: false, boolList: []});
+					user.quizzes[user.currentQuiz - 1].passed = true;
+					// model.createQuiz(function(err, quiz){
+					// 	user.quizzes.push(quiz.newQuiz); 
+					// 	user.save();
+				}
+				else if(shouldCreateQuiz){
+					user.currentQuiz++;
+					user.quizzes.push({passed: false, boolList: []});
+				}
+				
+				// console.log("user.quizzes[user.currentQuiz - 1].passed:", user.quizzes[user.currentQuiz -1].passed) // false here
 				// update database with changes to user
 				user.markModified('quizzes');
+				user.markModified('quizzes.passed');
 				user.markModified('questions');
+				console.log("user:", user);
+
 				user.save();
+				
 
 			}
 
@@ -132,8 +161,8 @@ var controller = {
 	},
 
 	quiz: function(req,res) {
-		model.createQuiz(function(error, quizNumber) {
-			res.render('quiz', {quizNumber: quizNumber})
+		model.createQuiz(function(error, quiz) {
+			res.render('quiz', {quizNumber: quiz.length})
 		});
 	}
 }
